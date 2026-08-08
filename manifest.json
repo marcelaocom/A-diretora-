@@ -1,0 +1,21 @@
+{
+  "name": "M1 Diretora",
+  "short_name": "DIRETORA",
+"start_url": "./A diretora 1.html",
+  "display": "standalone",
+  "background_color": "#050505",
+  "theme_color": "#D9111F",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "1000570034.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "1000570034.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
