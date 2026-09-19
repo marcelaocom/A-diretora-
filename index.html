@@ -10,7 +10,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-    <!-- Dependências (Tailwind para layout rápido, FontAwesome para ícones táticos) -->
+    <!-- Dependências -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
@@ -25,7 +25,7 @@
             background-color: var(--bg-dark);
             color: #FFFFFF;
             font-family: 'Courier New', Courier, monospace;
-            overflow: hidden; /* Mantém a matriz estática no telemóvel */
+            overflow: hidden;
             height: 100dvh;
             display: flex;
             flex-direction: column;
@@ -33,7 +33,6 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* Camada Base e Fundo Tático */
         #bg-layer {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: radial-gradient(circle at 80% 20%, rgba(217, 17, 31, 0.15) 0%, transparent 40%),
@@ -41,7 +40,6 @@
             z-index: -1;
         }
 
-        /* Estilização do Título Superior */
         .title-neon {
             font-family: 'Arial', sans-serif;
             font-weight: 900;
@@ -55,7 +53,6 @@
             display: inline-block;
         }
 
-        /* Cápsulas de Comando (Botões) */
         .cmd-btn {
             background: linear-gradient(145deg, rgba(20, 5, 5, 0.9) 0%, rgba(5, 5, 5, 0.95) 100%);
             border: 1px solid rgba(217, 17, 31, 0.4);
@@ -64,9 +61,9 @@
             transition: all 0.15s ease-out;
             position: relative;
             overflow: hidden;
+            touch-action: manipulation;
         }
 
-        /* Reflexo superior do vidro (Glassmorphism) */
         .cmd-btn::before {
             content: '';
             position: absolute; top: 0; left: 10%; width: 80%; height: 2px;
@@ -74,16 +71,33 @@
             opacity: 0.5;
         }
 
-        .cmd-btn:active {
+        .cmd-btn.recording {
             transform: scale(0.96);
             border-color: var(--m1-red);
             box-shadow: 0 0 25px var(--m1-red-glow), inset 0 0 30px rgba(217, 17, 31, 0.2);
+            background: linear-gradient(145deg, rgba(50, 5, 5, 0.9) 0%, rgba(15, 5, 5, 0.95) 100%);
         }
 
         .icon-wrapper {
             background: radial-gradient(circle, rgba(217, 17, 31, 0.2) 0%, transparent 70%);
             border: 1px solid var(--m1-red);
             box-shadow: 0 0 15px var(--m1-red-glow);
+            transition: all 0.2s;
+        }
+
+        .recording .icon-wrapper {
+            background: radial-gradient(circle, rgba(217, 17, 31, 0.6) 0%, transparent 70%);
+            box-shadow: 0 0 25px var(--m1-red-glow);
+            transform: scale(1.1);
+        }
+
+        .pulse-anim {
+            animation: pulse-mic 1s infinite alternate;
+        }
+
+        @keyframes pulse-mic {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(1.2); opacity: 0.5; }
         }
 
         .arrow-wrapper {
@@ -91,12 +105,12 @@
             box-shadow: 0 0 10px var(--m1-red-glow);
         }
 
-        /* Terminal Inferior */
         #console-panel {
             background: rgba(5, 5, 5, 0.95);
             border: 1px solid rgba(217, 17, 31, 0.3);
             box-shadow: inset 0 0 15px rgba(0,0,0,0.9);
             position: relative;
+            overflow-y: auto;
         }
         
         #console-panel::after {
@@ -107,40 +121,40 @@
         }
 
         .text-neon-red { color: var(--m1-red); text-shadow: 0 0 8px var(--m1-red-glow); }
+        
+        /* Ocultar elementos */
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
     <div id="bg-layer"></div>
 
-    <!-- CABEÇALHO (Escudo elevado de pt-8 para pt-4) -->
     <header class="flex justify-center pt-4 z-10 relative">
         <div class="w-24 h-24 flex items-center justify-center">
             <i class="fa-solid fa-shield-halved text-6xl text-neon-red" style="color: #D9111F; filter: drop-shadow(0 0 15px rgba(217,17,31,0.6));"></i>
         </div>
     </header>
 
-    <!-- BLOCO INFERIOR UNIFICADO: Sobe em direção ao escudo (-translate-y-6) -->
     <div class="flex-1 flex flex-col w-full z-10 relative -translate-y-6">
         
-        <!-- NOME DA DIRETORA (mt-2 para descer exatamente Meia Linha) -->
         <div class="text-center z-20 mt-2">
             <h1 class="text-2xl title-neon">A DIRETORA</h1>
         </div>
 
-        <!-- NÚCLEO DE OPERAÇÕES (Botões) (Ajustado para mt-4 para manter o alinhamento com a descida do título) -->
-        <main class="flex-1 flex flex-col justify-center px-6 gap-4 w-full max-w-md mx-auto mt-4">
+        <!-- PAINEL PRINCIPAL DE BOTÕES -->
+        <main id="mainControlPanel" class="flex-1 flex flex-col justify-center px-6 gap-4 w-full max-w-md mx-auto mt-4">
             
-            <!-- 1. ENVIAR ÁUDIO -->
-            <button class="cmd-btn w-full p-4 flex items-center justify-between group" onclick="executarAcao('audio')">
+            <!-- 1. ENVIAR ÁUDIO (Mantém premido para Rádio) -->
+            <button id="btnAudio" class="cmd-btn w-full p-4 flex items-center justify-between group">
                 <div class="flex items-center gap-4">
                     <div class="icon-wrapper w-14 h-14 rounded-full flex items-center justify-center">
-                        <i class="fa-solid fa-microphone text-2xl text-neon-red group-hover:scale-110 transition-transform"></i>
+                        <i id="iconAudio" class="fa-solid fa-microphone text-2xl text-neon-red transition-transform"></i>
                     </div>
                     <div class="text-left">
-                        <p class="text-[10px] text-gray-400 tracking-widest uppercase mb-1">Enviar</p>
+                        <p id="labelAudioTop" class="text-[10px] text-gray-400 tracking-widest uppercase mb-1">Manter Premido</p>
                         <h2 class="text-2xl font-bold text-white tracking-wide font-sans">ÁUDIO</h2>
-                        <p class="text-[9px] text-gray-500 mt-1">Fale, grave ou envie seu áudio.</p>
+                        <p class="text-[9px] text-gray-500 mt-1">Transmissão Rádio Direta.</p>
                     </div>
                 </div>
                 <div class="arrow-wrapper w-8 h-8 rounded-full flex items-center justify-center">
@@ -148,16 +162,16 @@
                 </div>
             </button>
 
-            <!-- 2. ENVIAR TEXTO -->
-            <button class="cmd-btn w-full p-4 flex items-center justify-between group" onclick="executarAcao('texto')">
+            <!-- 2. ENVIAR TEXTO (Mantém premido para IA) -->
+            <button id="btnTexto" class="cmd-btn w-full p-4 flex items-center justify-between group">
                 <div class="flex items-center gap-4">
                     <div class="icon-wrapper w-14 h-14 rounded-full flex items-center justify-center">
-                        <i class="fa-solid fa-comment-sms text-2xl text-neon-red group-hover:scale-110 transition-transform"></i>
+                        <i id="iconTexto" class="fa-solid fa-comment-sms text-2xl text-neon-red transition-transform"></i>
                     </div>
                     <div class="text-left">
-                        <p class="text-[10px] text-gray-400 tracking-widest uppercase mb-1">Enviar</p>
+                        <p id="labelTextoTop" class="text-[10px] text-gray-400 tracking-widest uppercase mb-1">Manter Premido</p>
                         <h2 class="text-2xl font-bold text-white tracking-wide font-sans">TEXTO</h2>
-                        <p class="text-[9px] text-gray-500 mt-1">Digite sua mensagem.</p>
+                        <p class="text-[9px] text-gray-500 mt-1">Comandos IA / Registo.</p>
                     </div>
                 </div>
                 <div class="arrow-wrapper w-8 h-8 rounded-full flex items-center justify-center">
@@ -166,32 +180,50 @@
             </button>
 
             <!-- 3. RECEBER MENSAGENS -->
-            <button class="cmd-btn w-full p-4 flex items-center justify-between group" onclick="executarAcao('mensagens')">
+            <button id="btnMensagens" class="cmd-btn w-full p-4 flex items-center justify-between group">
                 <div class="flex items-center gap-4">
-                    <div class="icon-wrapper w-14 h-14 rounded-full flex items-center justify-center">
-                        <i class="fa-regular fa-envelope text-2xl text-neon-red group-hover:scale-110 transition-transform"></i>
+                    <div class="icon-wrapper w-14 h-14 rounded-full flex items-center justify-center relative">
+                        <!-- Indicador de nova mensagem -->
+                        <div class="absolute top-0 right-0 w-3 h-3 bg-red-600 rounded-full animate-pulse border border-black"></div>
+                        <i class="fa-regular fa-envelope text-2xl text-neon-red transition-transform"></i>
                     </div>
                     <div class="text-left">
-                        <p class="text-[10px] text-gray-400 tracking-widest uppercase mb-1">Receber</p>
+                        <p class="text-[10px] text-gray-400 tracking-widest uppercase mb-1">Sincronizar</p>
                         <h2 class="text-2xl font-bold text-white tracking-wide font-sans">MENS</h2>
-                        <p class="text-[9px] text-gray-500 mt-1">Confira suas mensagens.</p>
+                        <p class="text-[9px] text-gray-500 mt-1">Forçar atualização de rede.</p>
                     </div>
                 </div>
                 <div class="arrow-wrapper w-8 h-8 rounded-full flex items-center justify-center">
-                    <i class="fa-solid fa-chevron-right text-neon-red text-sm"></i>
+                    <i class="fa-solid fa-rotate text-neon-red text-sm"></i>
                 </div>
             </button>
-
         </main>
 
-        <!-- RODAPÉ E TERMINAL -->
+        <!-- MÓDULO PLAYER VOLÁTIL (Oculto até chegar mensagem) -->
+        <div id="playerVolatil" class="hidden flex-1 flex-col justify-center px-6 gap-4 w-full max-w-md mx-auto mt-4 z-50">
+            <div class="text-center mb-4">
+                <div class="inline-block w-4 h-4 bg-red-600 rounded-full animate-pulse mb-2"></div>
+                <h2 class="text-xl font-bold text-white tracking-wide">MENSAGEM SECRETA</h2>
+                <p class="text-[10px] text-gray-400 tracking-widest uppercase">Buffer Volátil Ativo</p>
+            </div>
+            
+            <button onclick="MusicPilot.tocarAudioVolatil()" class="cmd-btn w-full p-6 flex justify-center items-center gap-4">
+                <i class="fa-solid fa-play text-2xl text-neon-red"></i>
+                <span class="text-lg font-bold text-white tracking-wide">REPRODUZIR</span>
+            </button>
+            
+            <button onclick="MusicPilot.destruirAudioVolatil()" class="cmd-btn w-full p-6 flex justify-center items-center gap-4 border-red-500" style="background: rgba(40, 5, 5, 0.9);">
+                <i class="fa-solid fa-dumpster-fire text-2xl text-white"></i>
+                <span class="text-lg font-bold text-white tracking-wide">ENTENDIDO / DESTRUIR</span>
+            </button>
+        </div>
+
+        <!-- RODAPÉ E TERMINAL (Conectado ao MusicPilot.log) -->
         <footer class="w-full px-6 pb-6 pt-4 max-w-md mx-auto">
-            <div id="console-panel" class="w-full h-16 p-3 rounded-lg flex items-center">
-                <div class="text-[9px] text-neon-red tracking-widest leading-relaxed">
-                    <span class="opacity-70">> [SYS] TERMINAL INICIALIZADO.</span><br>
-                    <span class="opacity-70">> AGUARDANDO COMANDO...</span>
-                    <span class="animate-pulse font-bold text-lg leading-none align-middle ml-1">_</span>
-                </div>
+            <div id="console-panel" class="w-full h-20 p-3 rounded-lg flex flex-col justify-end text-[9px] text-neon-red tracking-widest leading-relaxed">
+                <!-- O log será injetado aqui -->
+                <div><span class="opacity-70">> [SYS] TERMINAL INICIALIZADO.</span></div>
+                <div><span class="opacity-70">> AGUARDANDO COMANDO...<span class="animate-pulse font-bold text-lg leading-none align-middle ml-1">_</span></span></div>
             </div>
             
             <div class="text-center mt-4">
@@ -200,34 +232,86 @@
         </footer>
     </div>
 
-    <!-- LÓGICA DE INTERAÇÃO -->
+    <!-- LÓGICA DE INTERAÇÃO (Substitui o antigo executarAcao) -->
     <script>
-        function executarAcao(tipo) {
-            const terminalLines = document.querySelector('#console-panel div');
+        // Funcionalidade de injeção de texto no terminal para o MusicPilot usar
+        const terminal = document.getElementById('console-panel');
+        function atualizarTerminal(msg) {
+            // Remove o cursor do último elemento se existir
+            const htmlAtual = terminal.innerHTML.replace('<span class="animate-pulse font-bold text-lg leading-none align-middle ml-1">_</span>', '');
             
-            terminalLines.innerHTML = terminalLines.innerHTML.replace('<span class="animate-pulse font-bold text-lg leading-none align-middle ml-1">_</span>', '');
-            
-            let logMsg = "";
-            switch(tipo) {
-                case 'audio': logMsg = "> ACIONANDO MICROFONE TÁTICO..."; break;
-                case 'texto': logMsg = "> ABRINDO CONSOLE DE INSERÇÃO..."; break;
-                case 'mensagens': logMsg = "> SINCRONIZANDO PACOTES DE REDE..."; break;
-            }
-
-            terminalLines.innerHTML = `
-                <span class="opacity-70">> [SYS] REQUISIÇÃO RECEBIDA.</span><br>
-                <span class="opacity-90 font-bold">${logMsg}</span>
-                <span class="animate-pulse font-bold text-lg leading-none align-middle ml-1">_</span>
-            `;
-
-            setTimeout(() => {
-                terminalLines.innerHTML = `
-                    <span class="opacity-70">> [SYS] TERMINAL PRONTO.</span><br>
-                    <span class="opacity-70">> AGUARDANDO COMANDO...</span>
-                    <span class="animate-pulse font-bold text-lg leading-none align-middle ml-1">_</span>
-                `;
-            }, 2500);
+            // Adiciona a nova linha
+            terminal.innerHTML = htmlAtual + `<div><span class="opacity-90 font-bold">> ${msg}</span><span class="animate-pulse font-bold text-lg leading-none align-middle ml-1">_</span></div>`;
+            terminal.scrollTop = terminal.scrollHeight;
         }
+
+        // Variáveis nativas de conversão de voz (Botão Texto)
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = SpeechRecognition ? new SpeechRecognition() : null;
+        if(recognition) recognition.lang = 'pt-PT';
+
+        // --- BOTÃO ÁUDIO (RÁDIO) ---
+        const btnAudio = document.getElementById('btnAudio');
+        btnAudio.addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            btnAudio.classList.add('recording');
+            document.getElementById('iconAudio').classList.add('pulse-anim');
+            document.getElementById('labelAudioTop').textContent = "A GRAVAR...";
+            atualizarTerminal("ACIONANDO MICROFONE TÁTICO...");
+            if(window.MusicPilot) MusicPilot.iniciarGravacaoRadio();
+        });
+
+        btnAudio.addEventListener('pointerup', (e) => {
+            e.preventDefault();
+            btnAudio.classList.remove('recording');
+            document.getElementById('iconAudio').classList.remove('pulse-anim');
+            document.getElementById('labelAudioTop').textContent = "Manter Premido";
+            atualizarTerminal("PROCESSANDO PACOTE DE RÁDIO...");
+            if(window.MusicPilot) MusicPilot.pararGravacaoRadio();
+        });
+
+        // --- BOTÃO TEXTO (IA) ---
+        const btnTexto = document.getElementById('btnTexto');
+        btnTexto.addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            btnTexto.classList.add('recording');
+            document.getElementById('iconTexto').classList.add('pulse-anim');
+            document.getElementById('labelTextoTop').textContent = "A ESCUTAR...";
+            atualizarTerminal("ABRINDO CONSOLE DE IA...");
+            if(recognition) recognition.start();
+        });
+
+        btnTexto.addEventListener('pointerup', (e) => {
+            e.preventDefault();
+            btnTexto.classList.remove('recording');
+            document.getElementById('iconTexto').classList.remove('pulse-anim');
+            document.getElementById('labelTextoTop').textContent = "Manter Premido";
+            if(recognition) recognition.stop();
+        });
+
+        if(recognition) {
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                atualizarTerminal(`VOZ CAPTADA: "${transcript}"`);
+                if(window.MusicPilot) MusicPilot.processarTextoIA(transcript);
+            };
+        }
+
+        // --- BOTÃO MENSAGENS (Sincronização Manual) ---
+        const btnMensagens = document.getElementById('btnMensagens');
+        btnMensagens.addEventListener('click', (e) => {
+            e.preventDefault();
+            atualizarTerminal("A SINCRONIZAR COM O COFRE...");
+            // Chama a simulação do módulo volátil para testes
+            if(window.MusicPilot) {
+                setTimeout(() => {
+                    MusicPilot.simularChegadaMensagem('caminho_mock.mp3', '1234');
+                }, 1000);
+            }
+        });
     </script>
+    
+    <!-- NÚCLEO M1 IMPORTADO -->
+    <script src="music_pilot.js"></script>
 </body>
 </html>
