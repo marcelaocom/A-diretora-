@@ -3,341 +3,90 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>M1 | Terminal Tático (Modo Offline)</title>
+    <title>M1 | Terminal Tático</title>
     
-    <!-- Configurações PWA (Instalação Mobile) -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#050505">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="DIRETORA">
-    <link rel="apple-touch-icon" href="1000570034.png">
-    
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        /* FASE 1: UI Tática PWA (Brutalista e Noturna) */
-                body { 
-            background-color: #050505; 
-            color: #FFFFFF; 
-            font-family: 'Courier New', Courier, monospace; 
-            user-select: none; 
-            -webkit-tap-highlight-color: transparent;
+        body { 
+            background-color: #050505; color: #FFFFFF; font-family: 'Courier New', Courier, monospace; 
+            user-select: none; -webkit-tap-highlight-color: transparent;
         }
-
-        #m1-dynamic-bg {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            opacity: 0.15; /* Marca D'água Tática (15% de visibilidade) */
-            z-index: -2;
-            transition: background-image 0.5s ease;
-        }
-
-        #m1-bg-overlay {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: linear-gradient(180deg, rgba(5,5,5,0.7) 0%, rgba(5,5,5,0.98) 100%);
-            z-index: -1;
-        }
-
+        #m1-dynamic-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-size: cover; background-position: center; opacity: 0.15; z-index: -2; }
+        #m1-bg-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: linear-gradient(180deg, rgba(5,5,5,0.7) 0%, rgba(5,5,5,0.98) 100%); z-index: -1; }
         
-      .tactical-btn { 
-            width: 85vw; 
-            height: 55vh; 
-            border-radius: 40px; 
-            border: 4px solid rgba(255, 0, 17, 0.696); 
-            background: rgba(10, 10, 10, 0.25); /* Transparência profunda deixando a logo visível */
-            backdrop-filter: blur(2px); /* Desfoque tático muito suave */
-            -webkit-backdrop-filter: blur(2px);
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 0 30px rgba(217,17,31,0.1); 
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
+        /* Novos Botões Divididos */
+        .tactical-btn-half { 
+            width: 40vw; height: 35vh; border-radius: 30px; border: 3px solid; 
+            background: rgba(10, 10, 10, 0.4); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            transition: all 0.2s ease; box-shadow: inset 0 0 15px rgba(0,0,0,0.8);
         }
+        .tactical-btn-half.recording-text { background: rgba(217, 17, 31, 0.85); transform: scale(0.95); box-shadow: 0 0 50px rgba(217,17,31,0.6); }
+        .tactical-btn-half.recording-audio { background: rgba(249, 115, 22, 0.85); transform: scale(0.95); box-shadow: 0 0 50px rgba(249,115,22,0.6); }
         
-        /* Efeito de Gravação Ativa */
-        .tactical-btn.recording { 
-            background: rgba(217, 17, 31, 0.85); /* Fica vermelho translúcido quando grava */
-            border-color: #FF2D3F;
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            box-shadow: 0 0 80px rgba(217,17,31,0.6); 
-            transform: scale(0.96); 
-        }
-        
-        .recording .mic-icon { 
-            color: #FFFFFF;
-            animation: pulse-mic 1s infinite alternate; 
-        }
-        
-        @keyframes pulse-mic {
-            0% { transform: scale(1); opacity: 1; }
-            100% { transform: scale(1.2); opacity: 0.8; }
-        }
-
-        /* Status Visual Discreto */
-        .status-log {
-            font-family: monospace;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
+        .pulse-icon { animation: pulse-anim 1s infinite alternate; color: #FFF !important; }
+        @keyframes pulse-anim { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.2); opacity: 0.8; } }
+        .status-log { font-family: monospace; text-transform: uppercase; letter-spacing: 2px; }
     </style>
 </head>
-<body class="flex flex-col items-center justify-between h-screen w-screen py-12 overflow-hidden relative">
-
-    <!-- Módulo de Wallpaper Tático -->
+<body class="flex flex-col items-center justify-between h-screen w-screen py-8 overflow-hidden relative">
     <div id="m1-dynamic-bg"></div>
     <div id="m1-bg-overlay"></div>
-    <input type="file" id="m1WallpaperUpload" accept="image/*" class="hidden" onchange="handleM1Wallpaper(event)">
 
-    <!-- Header Discreto (Sem dados sensíveis - Write-Only) -->
+    <!-- Header -->
     <div class="w-full px-8 mt-2 flex justify-between items-center opacity-70">
         <div class="flex items-center gap-2">
             <div class="w-3 h-3 bg-red-600 rounded-full animate-pulse"></div>
-            <span class="text-[10px] font-bold tracking-widest text-red-500">OFFLINE MOCK</span>
+            <span class="text-[10px] font-bold tracking-widest text-red-500">CONECTANDO...</span>
         </div>
-        <div class="flex gap-5 items-center">
-            <i class="fa-solid fa-signal text-gray-600 text-sm"></i>
-            <button onclick="document.getElementById('modalSettings').classList.remove('hidden')" class="text-gray-500 hover:text-white transition cursor-pointer" title="Configurações">
-                <i class="fa-solid fa-gear text-lg"></i>
+        <i class="fa-solid fa-signal text-gray-600 text-sm"></i>
+    </div>
+
+    <!-- Título -->
+    <div class="text-center flex flex-col items-center justify-center mb-2">
+        <h1 class="text-3xl font-black tracking-widest text-white opacity-90">DIRETORA</h1>
+        <p class="text-[9px] text-gray-500 tracking-[0.4em] mt-3 font-bold uppercase">Painel Tático Duplo</p>
+    </div>
+
+    <!-- Painel de Controle Principal -->
+    <div id="mainControlPanel" class="w-full flex justify-center gap-4 px-6 mt-4">
+        <button id="btnText" class="tactical-btn-half border-red-600/70 focus:outline-none touch-manipulation">
+            <i id="iconText" class="fa-solid fa-brain text-4xl text-red-500 mb-4 transition-colors"></i>
+            <span id="labelText" class="text-[10px] font-bold tracking-widest text-gray-400 uppercase text-center px-2">IA / Texto</span>
+        </button>
+        
+        <button id="btnRadio" class="tactical-btn-half border-orange-500/70 focus:outline-none touch-manipulation">
+            <i id="iconRadio" class="fa-solid fa-walkie-talkie text-4xl text-orange-500 mb-4 transition-colors"></i>
+            <span id="labelRadio" class="text-[10px] font-bold tracking-widest text-gray-400 uppercase text-center px-2">Rádio Puro</span>
+        </button>
+    </div>
+
+    <!-- Módulo Player Volátil (Invisível por padrão) -->
+    <div id="playerVolatil" class="hidden w-[85vw] bg-[#101010]/90 border border-[#2C1013] rounded-3xl p-6 flex flex-col items-center justify-center backdrop-blur-md shadow-[0_0_40px_rgba(217,17,31,0.15)] mt-4 absolute top-[30%] z-50">
+        <div class="flex items-center gap-2 mb-6">
+            <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+            <span class="text-[10px] font-bold tracking-widest text-green-500">MENSAGEM RECEBIDA</span>
+        </div>
+        <div class="flex gap-4 w-full justify-center">
+            <button onclick="MusicPilot.tocarAudioVolatil()" class="flex-1 bg-[#1B1B1B] border border-gray-600 hover:border-white text-white font-bold py-4 rounded-xl text-xs transition shadow-md uppercase tracking-wider flex flex-col items-center gap-2">
+                <i class="fa-solid fa-rotate-right text-lg"></i> Replay
+            </button>
+            <button onclick="MusicPilot.destruirAudioVolatil()" class="flex-2 bg-red-600 hover:bg-red-500 text-white font-bold px-6 py-4 rounded-xl text-xs transition shadow-[0_0_15px_rgba(220,38,38,0.5)] uppercase tracking-wider flex flex-col items-center gap-2">
+                <i class="fa-solid fa-check text-lg"></i> Entendido
             </button>
         </div>
     </div>
 
-    <!-- Título Operacional com Logo Oficial -->
-    <div class="text-center flex flex-col items-center justify-center mb-4 relative" id="headerTitleArea">
-        <img id="mainLogo" src="" alt="A Diretora Logo" class="hidden w-32 md:w-40 object-contain drop-shadow-[0_0_20px_rgba(217,17,31,0.35)] transition-all">
-        <div id="fallbackLogo" class="flex flex-col items-center justify-center">
-            <h1 class="text-3xl font-black tracking-widest text-white opacity-90">DIRETORA</h1>
-        </div>
-        <p class="text-[9px] text-gray-500 tracking-[0.4em] mt-3 font-bold uppercase">Terminal de Campo</p>
-    </div>
-
-    <button id="btnM1" class="tactical-btn focus:outline-none touch-manipulation">
-        <i id="iconM1" class="mic-icon fa-solid fa-microphone-lines text-6xl text-[#D9111F] mb-6 transition-colors"></i>
-        <span id="textM1" class="text-sm font-bold tracking-widest text-gray-400 uppercase">Segure para Falar</span>
-    </button>
-
-    <!-- Console de Debug Invisível para o Usuário Comum, visível para nós testarmos -->
-    <div class="w-full px-8">
-        <div id="debugConsole" class="w-full bg-[#101010] border border-[#2C1013] rounded-xl h-24 p-3 overflow-y-auto text-[9px] text-green-500 status-log shadow-inner">
-            [SYS] Terminal Inicializado. Aguardando comando...
+    <!-- Console de Debug -->
+    <div class="w-full px-8 mb-4">
+        <div id="debugConsole" class="w-full bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl h-20 p-3 overflow-y-auto text-[9px] text-gray-500 status-log">
+            [SYS] Sistema Multi-Agente Armado.
         </div>
     </div>
 
-    <!-- MODAL DE CONFIGURAÇÕES (VISÍVEL E À PROVA DE FALHAS) -->
-    <div id="modalSettings" class="fixed inset-0 z-[500] hidden flex flex-col items-center justify-center p-4" style="background: rgba(0,0,0,0.85); backdrop-filter: blur(5px);">
-        <div class="bg-[#141414] border border-[#2C1013] rounded-2xl w-full max-w-sm flex flex-col shadow-[0_0_30px_rgba(217,17,31,0.3)] overflow-hidden">
-            <div class="p-6 border-b border-[#2C1013] flex justify-between items-center bg-[#070707]">
-                <h2 class="text-lg font-black text-white uppercase tracking-wide"><i class="fa-solid fa-image text-[#D9111F] mr-2"></i> Sistema</h2>
-                <button onclick="document.getElementById('modalSettings').classList.add('hidden')" class="text-[#5D5D5D] hover:text-[#FF4D4F] transition text-xl"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="p-6 bg-[#101010] flex flex-col gap-4 text-center">
-                <p class="text-xs text-[#B7B7B7] mb-2 font-bold uppercase tracking-wider">Substituir Identidade Visual</p>
-                <button onclick="document.getElementById('m1WallpaperUpload').click(); document.getElementById('modalSettings').classList.add('hidden');" class="w-full bg-[#1B1B1B] border border-[#321214] hover:bg-[#D9111F]/10 hover:border-[#D9111F] text-white font-bold px-6 py-4 rounded-xl text-[13px] transition shadow-md flex items-center justify-center uppercase tracking-wider">
-                    <i class="fa-solid fa-folder-open mr-2"></i> Selecionar Arquivo
-                </button>
-                <button onclick="localStorage.removeItem('m1_wallpaper'); window.location.reload();" class="text-[10px] text-red-500 font-bold underline mt-2 uppercase tracking-widest">Resetar Padrão</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // ==========================================
-        // CONFIGURAÇÕES GERAIS E ELEMENTOS
-        // ==========================================
-        const btnM1 = document.getElementById('btnM1');
-        const iconM1 = document.getElementById('iconM1');
-        const textM1 = document.getElementById('textM1');
-        const debugConsole = document.getElementById('debugConsole');
-        let isRecording = false;
-
-        function logDebug(msg, isError = false) {
-            const span = document.createElement('div');
-            span.textContent = `> ${msg}`;
-            span.className = isError ? 'text-red-500' : 'text-green-500';
-            debugConsole.appendChild(span);
-            debugConsole.scrollTop = debugConsole.scrollHeight;
-        }
-
-        // ==========================================
-        // FASE 2: CAPTURA NATIVA (Web Speech API)
-        // ==========================================
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SpeechRecognition) {
-            logDebug("ERRO CRÍTICO: Navegador não suporta Speech API.", true);
-            textM1.textContent = "API NÃO SUPORTADA";
-        }
-
-        const recognition = new SpeechRecognition();
-        recognition.continuous = false;
-        recognition.lang = 'pt-BR';
-        recognition.interimResults = false;
-
-        // Manipulação Tátil (Segurar para falar)
-        const startRecording = (e) => {
-            e.preventDefault();
-            if(isRecording) return;
-            try {
-                recognition.start();
-                btnM1.classList.add('recording');
-                textM1.textContent = "GRAVANDO...";
-                textM1.classList.replace('text-gray-400', 'text-white');
-                isRecording = true;
-                logDebug("[MIC] Aberto. Escutando...");
-            } catch (err) {
-                logDebug("[MIC] Erro ao iniciar: " + err.message, true);
-            }
-        };
-
-        const stopRecording = (e) => {
-            e.preventDefault();
-            if(!isRecording) return;
-            recognition.stop();
-            btnM1.classList.remove('recording');
-            textM1.textContent = "PROCESSANDO...";
-            isRecording = false;
-            logDebug("[MIC] Fechado. Analisando buffer...");
-        };
-
-        // Eventos Touch e Mouse para PWA
-        btnM1.addEventListener('touchstart', startRecording, {passive: false});
-        btnM1.addEventListener('touchend', stopRecording);
-        btnM1.addEventListener('mousedown', startRecording);
-        btnM1.addEventListener('mouseup', stopRecording);
-
-        // Processamento do Texto Falado
-        recognition.onresult = (event) => {
-            const transcript = event.results[0][0].transcript;
-            logDebug(`[VOZ] Capturado: "${transcript}"`);
-            
-            // Chama a Fase 3 (Dublê do Gemini)
-            // Chama o Núcleo da M1 (Music Pilot) localmente
-const jsonIA = MusicPilot.processarComando(transcript);
-            
-            // Chama a Fase 4 (Dublê de Nuvem e Voz)
-            executarGravacaoOffline(jsonIA);
-        };
-
-        recognition.onerror = (event) => {
-            logDebug(`[ERRO] Captura falhou: ${event.error}`, true);
-            resetUI();
-        };
-
-        function resetUI() {
-            textM1.textContent = "Segure para Falar";
-            textM1.classList.replace('text-white', 'text-gray-400');
-        }
-
-        // ==========================================
-        // FASE 3 REMOVIDA: A inteligência foi transferida para o arquivo music_pilot.js (Operação P.C.I v2.0)
-
-        // ==========================================
-        // FASE 4: DUBLÊ DE NUVEM (Write-Only) E FEEDBACK SONORO
-        // ==========================================
-        function executarGravacaoOffline(json) {
-            // 1. Write-Only no LocalStorage (Simulando o Firestore Blindado)
-            if (json.acao === 'lancar_despesa') {
-                const txsMock = JSON.parse(localStorage.getItem('m1_offline_caixa')) || [];
-                txsMock.push({ ...json.dados, data: new Date().toISOString() });
-                localStorage.setItem('m1_offline_caixa', JSON.stringify(txsMock));
-                logDebug("[COFRE] Despesa salva no storage local (Write-Only).");
-                
-                falarFeedback("Copiado. Despesa salva e sincronizada no cofre.");
-            } 
-            else if (json.acao === 'consultar_agenda') {
-                falarFeedback(json.dados.resposta_falada);
-            }
-            else {
-                const logsMock = JSON.parse(localStorage.getItem('m1_offline_logs')) || [];
-                logsMock.push({ log: json.dados.nota, data: new Date().toISOString() });
-                localStorage.setItem('m1_offline_logs', JSON.stringify(logsMock));
-                logDebug("[COFRE] Log em texto salvo.");
-                
-                falarFeedback("Comando recebido e anotado no diário de bordo.");
-            }
-
-            setTimeout(resetUI, 1500);
-        }
-
-        // Síntese de Voz Nativa (Simulando Google Cloud TTS)
-        function falarFeedback(mensagem) {
-            if (!window.speechSynthesis) {
-                logDebug("[TTS] Síntese de voz não suportada.", true);
-                return;
-            }
-
-            const utterance = new SpeechSynthesisUtterance(mensagem);
-            utterance.lang = 'pt-BR';
-            utterance.rate = 1.1; // Velocidade tática e direta
-            utterance.pitch = 0.9;
-            
-            utterance.onstart = () => logDebug("[AUDIO] Transmitindo feedback no fone...");
-            
-                        window.speechSynthesis.speak(utterance);
-        }
-
-        // ==========================================
-        // MÓDULO EXTRA: WALLPAPER TÁTICO
-        // ==========================================
-                function loadM1Wallpaper() {
-            const savedImg = localStorage.getItem('m1_wallpaper');
-            const bgDiv = document.getElementById('m1-dynamic-bg');
-            const mainLogo = document.getElementById('mainLogo');
-            const fallbackLogo = document.getElementById('fallbackLogo');
-
-            if(savedImg) {
-                if(bgDiv) bgDiv.style.backgroundImage = `url('${savedImg}')`;
-                if(mainLogo) {
-                    mainLogo.src = savedImg;
-                    mainLogo.classList.remove('hidden');
-                    if(fallbackLogo) fallbackLogo.classList.add('hidden');
-                }
-            } else {
-                if(mainLogo) mainLogo.classList.add('hidden');
-                if(fallbackLogo) fallbackLogo.classList.remove('hidden');
-            }
-        }
-
-        function handleM1Wallpaper(e) {
-            const file = e.target.files[0];
-            if(!file) return;
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                localStorage.setItem('m1_wallpaper', evt.target.result);
-                loadM1Wallpaper();
-                logDebug("[SYS] Identidade visual injetada no cofre local.");
-            };
-            reader.readAsDataURL(file);
-        }
-
-        loadM1Wallpaper();
-
-        // Gatilho Fantasma (Blindado Mobile/Desktop): Triplo Toque rápido para alterar a Logo e o Fundo
-        const headerTitleArea = document.getElementById('headerTitleArea');
-        if(headerTitleArea) {
-            let tapCount = 0;
-            let tapTimer = null;
-            
-            headerTitleArea.addEventListener('click', () => {
-                tapCount++;
-                
-                // Se der 3 toques rápidos, abre a galeria na hora
-                if (tapCount >= 3) {
-                    document.getElementById('m1WallpaperUpload').click();
-                    tapCount = 0;
-                }
-                
-                // Reseta a contagem se demorar mais de 1 segundo entre os toques
-                clearTimeout(tapTimer);
-                tapTimer = setTimeout(() => { tapCount = 0; }, 1000);
-            });
-        }
-        <!-- NÚCLEO M1 IMPORTADO -->
-<script src="music_pilot.js"></script>
-    </script>
+    <script src="music_pilot.js"></script>
 </body>
 </html>
